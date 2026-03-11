@@ -1,0 +1,76 @@
+name: Build Metabase DuckDB Driver
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Clone Metabase repository
+      uses: actions/checkout@v4
+      with:
+        repository: metabase/metabase
+        path: metabase
+        
+    - name: Checkout driver code
+      uses: actions/checkout@v4
+      with:
+        path: metabase/modules/drivers/duckdb
+        
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 'lts/*'
+        
+    - name: Install Yarn 1.x
+      run: |
+        npm install -g yarn@1
+        yarn --version
+        
+    - name: Set up Clojure
+      uses: DeLaGuardo/setup-clojure@13.4
+      with:
+        cli: latest
+        
+    - name: Build driver
+      working-directory: ./metabase
+      run: |
+        git apply ./modules/drivers/duckdb/ci/metabase_drivers_deps.patch
+        chmod +x ./bin/build-driver.sh
+        ./bin/build-driver.sh duckdb
+        
+    - name: Upload driver artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: metabase-duckdb-driver
+        path: metabase/resources/modules/duckdb.metabase-driver.jar
+        if-no-files-found: error
+        
+    - name: Run integration tests against MotherDuck
+      working-directory: ./metabase
+      continue-on-error: true
+      env:
+          motherduck_token: ${{ secrets.motherduck_ci_user_token }}
+      run: |
+        git apply ./modules/drivers/duckdb/ci/metabase_test_deps.patch
+        MB_EDITION=ee yarn build-static-viz
+        DRIVERS=motherduck clojure -X:dev:drivers:drivers-dev:ee:ee-dev:test
+
+    - name: Run integration tests against DuckDB local
+      working-directory: ./metabase
+      continue-on-error: true
+      run: |
+        DRIVERS=duckdb clojure -X:dev:drivers:drivers-dev:ee:ee-dev:test
+

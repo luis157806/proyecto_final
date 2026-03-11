@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: crm_raw
+    database: airbyte_curso
+    schema: main
+    tables:
+      - name: sales_pipeline
+      - name: accounts
+      - name: products
+      - name: sales_teams
+
+  - name: external_data
+    database: airbyte_curso
+    schema: main
+    tables:
+      - name: crypto
+        identifier: listing_01kk4n367

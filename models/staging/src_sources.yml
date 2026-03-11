@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: airbyte_raw
+    database: airbyte_curso  # <-- Cambiá esto por el nombre de tu base en MotherDuck
+    schema: main             # <-- Cambiá esto si Airbyte escribe en otro esquema
+    tables:
+      - name: sales_pipeline
+      - name: accounts
+      - name: products
+      - name: sales_teams
