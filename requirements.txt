@@ -1,0 +1,49 @@
+Pasos para instalar el proyecto localmente
+Sigue estas instrucciones para replicar el entorno de desarrollo:
+
+1. Clonar el repositorio
+PowerShell
+git clone https://github.com/luis157806/proyecto_final.git
+cd proyecto_final
+2. Crear y activar el entorno virtual
+Es necesario para mantener las dependencias aisladas.
+
+PowerShell
+# Crear el entorno
+python -m venv dbt-env-estable
+
+# Activar en PowerShell
+.\dbt-env-estable\Scripts\Activate.ps1
+3. Instalar dependencias
+He preparado el archivo de requerimientos para instalar dbt-core, el adaptador de duckdb y prefect.
+
+PowerShell
+pip install dbt-duckdb prefect
+4. Instalar paquetes de dbt
+Para activar las pruebas de dbt-expectations:
+
+PowerShell
+dbt deps
+5. Configurar credenciales (profiles.yml)
+Debes configurar tu archivo de perfiles de dbt (usualmente en ~/.dbt/profiles.yml) con tu token de MotherDuck:
+
+YAML
+mi_proyecto_dbt:
+  outputs:
+    dev:
+      type: duckdb
+      path: 'md:mi_base_de_datos?motherduck_token=TU_TOKEN_AQUÍ'
+      schema: main
+  target: dev
+6. Ejecutar el Pipeline
+Una vez configurado, puedes correr todo el proceso:
+
+PowerShell
+# Correr transformaciones y tests
+dbt build
+
+# Iniciar el servidor de orquestación
+prefect server start
+
+# Ejecutar el flujo de orquestación
+python etl_flow.py
